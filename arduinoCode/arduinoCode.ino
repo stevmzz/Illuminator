@@ -47,11 +47,13 @@ class LED : public Componente {
 
     // Sobrescritura de métodos
     void iniciar() override {
-      // Implementación para inicializar un LED
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, LOW); // Inicializa el LED apagado
     }
 
     void escribir(int valor) override {
-      // Implementación para encender/apagar el LED
+        estado = valor;
+        digitalWrite(pin, valor ? HIGH : LOW);
     }
 };
 
@@ -63,13 +65,13 @@ class Sensor : public Componente {
 
     // Sobrescritura de métodos
     void iniciar() override {
-      // Implementación para inicializar un sensor
+        pinMode(pin, INPUT);
     }
 
     int leer() override {
-      // Implementación para leer valores del sensor
-      return 0;
+        return analogRead(pin); // Leer el valor analógico
     }
+
 };
 
 // Clase Pantalla
@@ -96,11 +98,56 @@ class Boton : public Componente {
 
     // Sobrescritura de métodos
     void iniciar() override {
-      // Implementación para inicializar un botón
+        pinMode(pin, INPUT_PULLUP);
     }
 
     int leer() override {
-      // Implementación para leer el estado del botón
-      return 0;
+        return digitalRead(pin);
     }
 };
+
+const int cantidad = 6;
+LED leds[cantidad] = {7, 6, 5, 4, 3, 2};
+Sensor sensores[cantidad] = {A0, A1, A2, A3, A4, A5};
+Boton boton(8);
+
+bool modoAutomatico = true;
+unsigned long ultimoTiempoBoton = 0;
+const long tiempoDebounce = 200;
+
+void setup() {
+    for (int i = 0; i < cantidad; i++) {
+        leds[i].iniciar();
+        sensores[i].iniciar();
+    }
+    boton.iniciar();
+    Serial.begin(9600);
+}
+
+void loop() {
+    // Lógica del botón
+    if ((millis() - ultimoTiempoBoton) > tiempoDebounce) {
+        if (boton.leer() == LOW && !modoAutomatico) {
+            modoAutomatico = !modoAutomatico;
+            Serial.println(modoAutomatico ? "Modo automático activado" : "Modo automático desactivado");
+            ultimoTiempoBoton = millis();
+        }
+    }
+
+    // Control automático de LEDs
+    if (modoAutomatico) {
+        for (int i = 0; i < cantidad; i++) {
+            int luz = sensores[i].leer();
+            leds[i].escribir(luz < 500); // Encender si luz ambiental es baja
+            Serial.print("Sensor ");
+            Serial.print(i);
+            Serial.print(": ");
+            Serial.print(luz);
+            Serial.print(" - LED ");
+            Serial.print(i);
+            Serial.println(luz < 500 ? "Encendido" : "Apagado");
+        }
+    }
+
+    delay(100); // Estabilización
+}
