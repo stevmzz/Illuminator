@@ -102,7 +102,7 @@ class Pantalla : public Componente {
 class Boton : public Componente {
   private:
     unsigned long ultimoTiempoBoton; // Para el control de rebote
-    const long tiempoDebounce = 1000; // Tiempo de debounce en ms
+    const long tiempoDebounce = 2000; // Tiempo de debounce en ms
     int estadoAnterior; // Para detectar cambios
 
   public:
@@ -156,7 +156,7 @@ void setup() {
 // Bucle principal del sistema
 void loop() {
     // Crear instancias de los componentes necesarios
-    Sensor sensorLuz(A0);
+    Sensor sensorLuz(A1);
     Boton botonControl(0);
     LED ledsHabitaciones[] = {
         LED(2), LED(3), LED(4), LED(5), 
