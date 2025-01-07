@@ -1,13 +1,16 @@
-// Clase base para todos los componentes
+// Variables globales
+bool modoAutomatico = true;  // Estado del modo automático
+
 class Componente {
   protected:
-    int pin;       // Número de pin del componente
-    bool estado;   // Estado del componente (encendido/apagado)
+    int pin; // Número de pin del componente
+    bool estado; // Estado del componente
+
   public:
     // Constructor
     Componente(int numeroPin) {
-      pin = numeroPin;
-      estado = false;
+      pin = numeroPin; // Asigna el número de pin recibido
+      estado = false; // Inicialmente, el componente está apagado
     }
     // Métodos virtuales
     virtual void iniciar() {
@@ -38,38 +41,43 @@ class LED : public Componente {
   public:
     // Constructor
     LED(int numeroPin) : Componente(numeroPin) {}
-    // Sobrescritura de métodos
+    
     void iniciar() override {
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, LOW);
-      estado = false;
+      pinMode(pin, OUTPUT); // Configura el pin como salida
+      digitalWrite(pin, LOW); // Inicialmente apaga el LED
+      estado = false; // Actualiza el estado interno
     }
+    
     void escribir(int valor) override {
-      digitalWrite(pin, valor);
-      estado = (valor == HIGH);
+      digitalWrite(pin, valor); // Escribe el valor en el pin sea HIGH o LOW
+      estado = (valor == HIGH); // Actualiza el estado
     }
 };
 
 // Clase Sensor
 class Sensor : public Componente {
   private:
-    int umbralLuz;  // Umbral para la detección de luz
+    int umbralLuz; // Umbral para la detección de luz
+
   public:
     // Constructor
     Sensor(int numeroPin) : Componente(numeroPin) {
-      umbralLuz = 500;  // Valor predeterminado del umbral
+      umbralLuz = 500; // Valor predeterminado del umbral
     }
-    // Sobrescritura de métodos
+
     void iniciar() override {
-      pinMode(pin, INPUT);
+      pinMode(pin, INPUT); // Configura el pin como entrada
     }
+
     int leer() override {
-      return analogRead(pin);
+      return analogRead(pin); // Lee el valor analógico del sensor
     }
+
     // Método para establecer el umbral de luz
     void establecerUmbralLuz(int nuevoUmbral) {
-      umbralLuz = nuevoUmbral;
+      umbralLuz = nuevoUmbral; 
     }
+
     // Método para obtener el umbral de luz
     int obtenerUmbralLuz() {
       return umbralLuz;
@@ -93,36 +101,36 @@ class Pantalla : public Componente {
 // Clase Botón
 class Boton : public Componente {
   private:
-    unsigned long ultimoTiempoBoton;  // Para el control de rebote
-    const long tiempoDebounce = 200;  // Tiempo de debounce en milisegundos
-    int estadoAnterior;               // Para detectar cambios
+    unsigned long ultimoTiempoBoton; // Para el control de rebote
+    const long tiempoDebounce = 200; // Tiempo de debounce en ms
+    int estadoAnterior; // Para detectar cambios
 
   public:
     // Constructor
     Boton(int numeroPin) : Componente(numeroPin) {
-      ultimoTiempoBoton = 0;
-      estadoAnterior = HIGH;
+      ultimoTiempoBoton = 0; // Inicia el tiempo en cereo
+      estadoAnterior = HIGH; // Inicializa el estado anterior
     }
+
     // Sobrescritura de métodos
     void iniciar() override {
-      pinMode(pin, INPUT_PULLUP);
-      estadoAnterior = digitalRead(pin);
+      pinMode(pin, INPUT_PULLUP); // Configura el pin como entrada con resistencia pull-up
+      estadoAnterior = digitalRead(pin); // Lee el estado inicial
     }
+
     int leer() override {
-      int estadoActual = digitalRead(pin);
-      if ((millis() - ultimoTiempoBoton) > tiempoDebounce) {
-        if (estadoActual == LOW && estadoAnterior == HIGH) {
-          ultimoTiempoBoton = millis();
-          estado = !estado;  // Cambiar estado del botón
+      int estadoActual = digitalRead(pin); // Lee el estado actual del botón
+
+      if ((millis() - ultimoTiempoBoton) > tiempoDebounce) { // Verifica si ha pasado suficiente tiempo
+        if (estadoActual == LOW && estadoAnterior == HIGH) { // Si el botón se presiona
+          ultimoTiempoBoton = millis(); // Actualiza el tiempo de la última pulsación
+          estado = !estado; // Cambiar estado del botón
         }
       }
-      estadoAnterior = estadoActual;
-      return estado;
+      estadoAnterior = estadoActual; // Actualiza el estado anterior
+      return estado; // Retorna el estado actual
     }
 };
-
-// Variables globales para el control de iluminación automática
-bool modoAutomatico = true;  // Estado del modo automático
 
 // Configuración inicial del sistema
 void setup() {
@@ -163,11 +171,11 @@ void loop() {
 
     // Procesar el control automático de iluminación
     if (modoAutomatico) {
-        int valorLuz = sensorLuz.leer();
+        int valorLuz = sensorLuz.leer(); // Lee el valor del sensr
         // Controlar todos los LEDs según el nivel de luz
         for(int i = 0; i < 7; i++) {
             ledsHabitaciones[i].escribir(
-                valorLuz >= sensorLuz.obtenerUmbralLuz() ? HIGH : LOW
+                valorLuz >= sensorLuz.obtenerUmbralLuz() ? HIGH : LOW // Dependiendo del valor del sensor apaga o enciende los leds
             );
         }
         
