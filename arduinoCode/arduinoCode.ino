@@ -1,41 +1,37 @@
-#include <Adafruit_LiquidCrystal.h> // Biblioteca Adafruit para manejar la pantalla LCD
+#include <Adafruit_LiquidCrystal.h>
 
-// Clase base para todos los componentes
+// Variables globales
+bool modoAutomatico = true;  // Estado del modo automático
+
 class Componente {
   protected:
-    int pin;       // Número de pin del componente
-    bool estado;   // Estado del componente (encendido/apagado)
+    int pin; // Número de pin del componente
+    bool estado; // Estado del componente
 
   public:
     // Constructor
     Componente(int numeroPin) {
-      pin = numeroPin;
-      estado = false;
+      pin = numeroPin; // Asigna el número de pin recibido
+      estado = false; // Inicialmente, el componente está apagado
     }
-
     // Métodos virtuales
     virtual void iniciar() {
       // Implementación base - puede ser sobrescrita por clases hijas
     }
-
     virtual void escribir(int valor) {
       // Implementación base - puede ser sobrescrita por clases hijas
     }
-
     virtual int leer() {
       // Implementación base - puede ser sobrescrita por clases hijas
       return 0;
     }
-
     // Métodos getter
     int obtenerPin() {
       return pin;
     }
-
     bool obtenerEstado() {
       return estado;
     }
-
     // Método setter
     void establecerEstado(bool nuevoEstado) {
       estado = nuevoEstado;
@@ -47,45 +43,44 @@ class LED : public Componente {
   public:
     // Constructor
     LED(int numeroPin) : Componente(numeroPin) {}
-
-    // Sobrescritura de métodos
+    
     void iniciar() override {
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, LOW);
-      estado = false;
+      pinMode(pin, OUTPUT); // Configura el pin como salida
+      digitalWrite(pin, LOW); // Inicialmente apaga el LED
+      estado = false; // Actualiza el estado interno
     }
-
+    
     void escribir(int valor) override {
-      digitalWrite(pin, valor);
-      estado = (valor == HIGH);
+      digitalWrite(pin, valor); // Escribe el valor en el pin sea HIGH o LOW
+      estado = (valor == HIGH); // Actualiza el estado
     }
 };
 
 // Clase Sensor
 class Sensor : public Componente {
   private:
-    int umbralLuz;
+    int umbralLuz; // Umbral para la detección de luz
 
   public:
     // Constructor
     Sensor(int numeroPin) : Componente(numeroPin) {
-      umbralLuz = 500;  // Valor predeterminado del umbral
+      umbralLuz = 5; // Valor predeterminado del umbral ajustado para condiciones de luz
     }
 
-    // Sobrescritura de métodos
     void iniciar() override {
-      pinMode(pin, INPUT);
+      pinMode(pin, INPUT); // Configura el pin como entrada
     }
 
     int leer() override {
-      return analogRead(pin);
+      return analogRead(pin); // Lee el valor analógico del sensor
     }
 
-    // Métodos para el umbral de luz
+    // Método para establecer el umbral de luz
     void establecerUmbralLuz(int nuevoUmbral) {
-      umbralLuz = nuevoUmbral;
+      umbralLuz = nuevoUmbral; 
     }
 
+    // Método para obtener el umbral de luz
     int obtenerUmbralLuz() {
       return umbralLuz;
     }
@@ -94,145 +89,190 @@ class Sensor : public Componente {
 // Clase Pantalla
 class Pantalla : public Componente {
   private:
-    Adafruit_LiquidCrystal lcd; // Objeto LCD de la biblioteca Adafruit
-    int columnas;
-    int filas;
-
+    // Aquí puedes agregar variables específicas para la pantalla LCD
+    
   public:
     // Constructor
-    Pantalla(int rs, int enable, int d4, int d5, int d6, int d7, int cols, int rows) 
-      : Componente(-1), lcd(rs, enable, d4, d5, d6, d7) {
-      columnas = cols;
-      filas = rows;
-    }
-
-    // Sobrescritura de métodos
+    Pantalla(int numeroPin) : Componente(numeroPin) {}
+    
     void iniciar() override {
-      lcd.begin(columnas, filas);
-      lcd.clear();
-      lcd.print("Sistema Iniciado");
-      delay(2000);
-      lcd.clear();
+      // Implementación para inicializar una pantalla
+      // Agregar código específico para tu pantalla LCD
     }
-
-    void mostrarModoYValor(int modo, int valorLuz) {
-      lcd.clear(); // Limpiar la pantalla antes de mostrar nueva información
-      lcd.setCursor(0, 0);
-      lcd.print("Modo: ");
-      switch (modo) {
-        case 0: lcd.print("Noche"); break;
-        case 1: lcd.print("Lectura"); break;
-        case 2: lcd.print("Fiesta"); break;
-        case 3: lcd.print("Exterior"); break;
-        default: lcd.print("Desconocido"); break;
-      }
-
-      lcd.setCursor(0, 1); // Segunda línea
-      lcd.print("Sensor: ");
-      lcd.print(valorLuz); // Mostrar el valor del sensor
+    
+    void escribir(int valor) override {
+      // Implementación para escribir valores en la pantalla
+      // Agregar código específico para tu pantalla LCD
     }
 };
 
 // Clase Botón
 class Boton : public Componente {
   private:
-    int modoActual;
-    unsigned long ultimoTiempo;
-    const unsigned long debounceDelay = 50;
+    unsigned long ultimoTiempoBoton; // Para el control de rebote
+    const long tiempoDebounce = 50; // Tiempo de debounce en ms
+    int estadoAnterior; // Para detectar cambios
+    bool esModoAutomatico; // Para diferenciar el tipo de botón
 
   public:
-    // Constructor
-    Boton(int numeroPin) : Componente(numeroPin) {
-      modoActual = 0;
-      ultimoTiempo = 0;
+    // Constructor modificado para especificar el tipo de botón
+    Boton(int numeroPin, bool modoAutomatico = false) : Componente(numeroPin) {
+      ultimoTiempoBoton = 0;
+      estadoAnterior = HIGH;
+      esModoAutomatico = modoAutomatico;
     }
 
-    // Sobrescritura de métodos
     void iniciar() override {
       pinMode(pin, INPUT_PULLUP);
+      estadoAnterior = digitalRead(pin);
     }
 
     int leer() override {
-      return !digitalRead(pin);
-    }
+      int estadoActual = digitalRead(pin);
+      unsigned long tiempoActual = millis();
 
-    int cambiarModo() {
-      int estadoBoton = leer();
-      if (estadoBoton == HIGH && (millis() - ultimoTiempo > debounceDelay)) {
-        ultimoTiempo = millis();
-        modoActual++;
-        if (modoActual > 3) modoActual = 0;
+      if ((tiempoActual - ultimoTiempoBoton) > tiempoDebounce) {
+        if (estadoActual == LOW && estadoAnterior == HIGH) {
+          ultimoTiempoBoton = tiempoActual;
+          
+          if (esModoAutomatico) {
+            estado = !estado; // Mantiene el estado para el botón de modo automático
+          } else {
+            return true; // Para botones manuales, solo retorna true cuando se presiona
+          }
+        }
       }
-      return modoActual;
+      
+      estadoAnterior = estadoActual;
+      return esModoAutomatico ? estado : false;
     }
 };
 
-// Variables globales
-LED luzSala(3);
-LED luzPatio(4);
-LED luzFiesta(5);
-LED luzExterior(6);
-Boton boton_modo(2);
+// Variables para componentes
 Sensor sensorLuz(A0);
-Pantalla pantalla(12, 11, 5, 4, 3, 2, 16, 2);
-bool modoAutomatico = true;
+LED ledsHabitaciones[] = {
+    LED(2), // Sala
+    LED(3), // Cocina
+    LED(4), // Cuarto 1
+    LED(5), // Cuarto 2
+    LED(6), // Cuarto 3
+    LED(7), // Patio interno
+    LED(8)  // Patio frontal y trasero
+};
+Boton botonControl(9, true); // Botón para modo automático
+Boton botonesManual[] = {
+    Boton(10), // Sala
+    Boton(11), // Cocina
+    Boton(12), // Cuarto 1
+    Boton(13), // Cuarto 2
+    Boton(A1), // Cuarto 3
+    Boton(A2), // Patio interno
+    Boton(A3)  // Patio frontal y trasero
+};
+// Variables globales para el control de modos
+int modoActual = 0; // 0: Sin modo, 1: Fiesta, 2: Sueño, 3: Lectura, 4: Exterior
+Boton botonModo(A4); // Nuevo botón conectado al pin A4 para cambiar modos
 
-void activarModo(int modo) {
-  luzSala.escribir(LOW);
-  luzPatio.escribir(LOW);
-  luzFiesta.escribir(LOW);
-  luzExterior.escribir(LOW);
-
-  pantalla.mostrarModoYValor(modo, sensorLuz.leer()); // Mostrar modo y valor del sensor
-
-  switch (modo) {
-    case 0: break;
-    case 1: luzSala.escribir(HIGH); break;
-    case 2:
-      for (int i = 0; i < 10; i++) {
-        luzSala.escribir(HIGH);
-        luzPatio.escribir(HIGH);
-        luzFiesta.escribir(HIGH);
-        luzExterior.escribir(HIGH);
-        delay(200);
-        luzSala.escribir(LOW);
-        luzPatio.escribir(LOW);
-        luzFiesta.escribir(LOW);
-        luzExterior.escribir(LOW);
-        delay(200);
-      }
-      break;
-    case 3: luzPatio.escribir(HIGH); break;
-  }
-}
-
-void setup() {
-  Serial.begin(9600);
-  boton_modo.iniciar();
-  luzSala.iniciar();
-  luzPatio.iniciar();
-  luzFiesta.iniciar();
-  luzExterior.iniciar();
-  sensorLuz.iniciar();
-  pantalla.iniciar();
-}
-
-void loop() {
-  int modo = boton_modo.cambiarModo();
-
-  if (modoAutomatico) {
-    int valorLuz = sensorLuz.leer();
-    for (int i = 0; i < 7; i++) {
-      luzSala.escribir(valorLuz >= sensorLuz.obtenerUmbralLuz() ? HIGH : LOW);
+// Función para manejar los modos de luces
+void modosDeLuces() {
+    // Leer el botón de modo
+    if (botonModo.leer()) {
+        modoActual = (modoActual + 1) % 5; // Cambia al siguiente modo (0 a 4)
+        
+        // Apagar todos los LEDs para evitar confusión
+        for (int i = 0; i < 7; i++) {
+            ledsHabitaciones[i].escribir(LOW);
+        }
     }
-    Serial.print("Sensor: ");
-    Serial.print(valorLuz);
-    Serial.print(" - LEDs: ");
-    Serial.println(valorLuz >= sensorLuz.obtenerUmbralLuz() ? "Encendidos" : "Apagados");
-    pantalla.mostrarModoYValor(modo, valorLuz); // Mostrar modo y valor en la pantalla
-  } else {
-    activarModo(modo);
-  }
 
-  delay(100);
+    // Activar el modo correspondiente
+    switch (modoActual) {
+        case 1: // Modo Fiesta
+            for (int i = 0; i < 7; i++) {
+                ledsHabitaciones[i].escribir(HIGH);
+                delay(100);
+                ledsHabitaciones[i].escribir(LOW);
+            }
+            break;
+        case 2: // Modo Sueño
+            // Todos los LEDs ya están apagados
+            break;
+        case 3: // Modo Lectura
+            ledsHabitaciones[0].escribir(HIGH); // Encender solo la sala (LED 0)
+            break;
+        case 4: // Modo Exterior
+            ledsHabitaciones[6].escribir(HIGH); // Encender patio interno (LED 6)
+            ledsHabitaciones[5].escribir(HIGH); // Encender patio externo (LED 5)
+            break;
+    }
+}
+
+
+// Configuración inicial del sistema
+void setup() {
+    Serial.begin(9600);  // Iniciar comunicación serial para monitoreo
+
+    // Inicializar sensor
+    sensorLuz.iniciar();
+    sensorLuz.establecerUmbralLuz(5);
+    
+    // Inicializar botón de modo
+    botonControl.iniciar();
+    botonModo.iniciar(); // Inicializar el botón para cambiar modos
+    
+    // Inicializar LEDs
+    for (int i = 0; i < 7; i++) {
+        ledsHabitaciones[i].iniciar();
+    }
+    
+    // Inicializar botones de control manual
+    for (int i = 0; i < 7; i++) {
+        botonesManual[i].iniciar();
+    }
+}
+
+// Bucle principal del sistema
+void loop() {
+    // Verificar cambio en el modo automático
+    if (botonControl.leer()) {
+        modoAutomatico = !modoAutomatico;
+        Serial.print("Modo Automático: ");
+        Serial.println(modoAutomatico ? "Activado" : "Desactivado");
+    }
+
+    // Manejar los modos de luces
+    modosDeLuces();
+
+    // Control automático
+    if (modoAutomatico && modoActual == 0) { // Solo funciona si no hay un modo activo
+        int valorLuz = sensorLuz.leer();
+        for (int i = 0; i < 7; i++) {
+            ledsHabitaciones[i].escribir(
+                valorLuz > sensorLuz.obtenerUmbralLuz() ? HIGH : LOW
+            );
+        }
+        
+        Serial.print("Sensor: ");
+        Serial.print(valorLuz);
+        Serial.print(" - LEDs: ");
+        Serial.println(valorLuz > sensorLuz.obtenerUmbralLuz() ? 
+                      "Encendidos" : "Apagados");
+    }
+
+    // Control manual
+    if (!modoAutomatico && modoActual == 0) { // Solo funciona si no hay un modo activo
+        for (int i = 0; i < 7; i++) {
+            if (botonesManual[i].leer()) {
+                bool estadoActual = ledsHabitaciones[i].obtenerEstado();
+                ledsHabitaciones[i].escribir(estadoActual ? LOW : HIGH);
+                
+                Serial.print("LED ");
+                Serial.print(i);
+                Serial.print(": ");
+                Serial.println(!estadoActual ? "Encendido" : "Apagado");
+            }
+        }
+    }
+
+    delay(100);  // Pequeña pausa para estabilidad
 }
