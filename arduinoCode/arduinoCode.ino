@@ -62,7 +62,7 @@ class Sensor : public Componente {
   public:
     // Constructor
     Sensor(int numeroPin) : Componente(numeroPin) {
-      umbralLuz = 500; // Valor predeterminado del umbral
+      umbralLuz = 5; // Valor predeterminado del umbral ajustado para condiciones de luz
     }
 
     void iniciar() override {
@@ -102,7 +102,7 @@ class Pantalla : public Componente {
 class Boton : public Componente {
   private:
     unsigned long ultimoTiempoBoton; // Para el control de rebote
-    const long tiempoDebounce = 200; // Tiempo de debounce en ms
+    const long tiempoDebounce = 1000; // Tiempo de debounce en ms
     int estadoAnterior; // Para detectar cambios
 
   public:
@@ -146,6 +146,7 @@ void setup() {
 
     // Inicializar componentes
     sensorLuz.iniciar();
+    sensorLuz.establecerUmbralLuz(5); // Establecer umbral ajustado para las condiciones actuales
     botonControl.iniciar();
     for(int i = 0; i < 7; i++) {
         ledsHabitaciones[i].iniciar();
@@ -171,11 +172,11 @@ void loop() {
 
     // Procesar el control automático de iluminación
     if (modoAutomatico) {
-        int valorLuz = sensorLuz.leer(); // Lee el valor del sensr
+        int valorLuz = sensorLuz.leer(); // Lee el valor del sensor
         // Controlar todos los LEDs según el nivel de luz
         for(int i = 0; i < 7; i++) {
             ledsHabitaciones[i].escribir(
-                valorLuz >= sensorLuz.obtenerUmbralLuz() ? HIGH : LOW // Dependiendo del valor del sensor apaga o enciende los leds
+                valorLuz > sensorLuz.obtenerUmbralLuz() ? HIGH : LOW // Enciende los LEDs cuando el valor es mayor que el umbral
             );
         }
         
@@ -183,7 +184,7 @@ void loop() {
         Serial.print("Sensor: ");
         Serial.print(valorLuz);
         Serial.print(" - LEDs: ");
-        Serial.println(valorLuz >= sensorLuz.obtenerUmbralLuz() ? 
+        Serial.println(valorLuz > sensorLuz.obtenerUmbralLuz() ? 
                       "Encendidos" : "Apagados");
     }
 
