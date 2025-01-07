@@ -156,7 +156,7 @@ void setup() {
 // Bucle principal del sistema
 void loop() {
     // Crear instancias de los componentes necesarios
-    Sensor sensorLuz(A1);
+    Sensor sensorLuz(A0);
     Boton botonControl(0);
     LED ledsHabitaciones[] = {
         LED(2), LED(3), LED(4), LED(5), 
