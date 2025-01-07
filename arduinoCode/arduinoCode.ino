@@ -172,7 +172,7 @@ LED luzSala(3);
 LED luzPatio(4);
 LED luzFiesta(5);
 LED luzExterior(6);
-Boton boton(2);
+Boton boton_modo(2);
 Sensor sensorLuz(A0);
 Pantalla pantalla(12, 11, 5, 4, 3, 2, 16, 2);
 bool modoAutomatico = true;
@@ -208,7 +208,7 @@ void activarModo(int modo) {
 
 void setup() {
   Serial.begin(9600);
-  boton.iniciar();
+  boton_modo.iniciar();
   luzSala.iniciar();
   luzPatio.iniciar();
   luzFiesta.iniciar();
@@ -218,7 +218,7 @@ void setup() {
 }
 
 void loop() {
-  int modo = boton.cambiarModo();
+  int modo = boton_modo.cambiarModo();
 
   if (modoAutomatico) {
     int valorLuz = sensorLuz.leer();
