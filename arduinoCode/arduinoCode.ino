@@ -181,23 +181,23 @@ class Boton : public Componente {
 // Variables para componentes
 Sensor sensorLuz(A0);
 LED ledsHabitaciones[] = {
-    LED(2), // Sala
-    LED(3), // Cocina
-    LED(4), // Cuarto 1
-    LED(5), // Cuarto 2
-    LED(6), // Cuarto 3
-    LED(7), // Patio interno
-    LED(8)  // Patio frontal y trasero
+    LED(7), // Sala
+    LED(8), // Cocina
+    LED(9), // Cuarto 1
+    LED(10), // Cuarto 2
+    LED(11), // Cuarto 3
+    LED(12), // Patio interno
+    LED(13)  // Patio frontal y trasero
 };
-Boton botonControl(9, true); // Botón para modo automático
+Boton botonControl(A1, true); // Botón para modo automático
 Boton botonesManual[] = {
-    Boton(10), // Sala
-    Boton(11), // Cocina
-    Boton(12), // Cuarto 1
-    Boton(13), // Cuarto 2
-    Boton(A1), // Cuarto 3
-    Boton(A2), // Patio interno
-    Boton(A3)  // Patio frontal y trasero
+    Boton(0), // Sala
+    Boton(1), // Cocina
+    Boton(2), // Cuarto 1
+    Boton(3), // Cuarto 2
+    Boton(4), // Cuarto 3
+    Boton(5), // Patio interno
+    Boton(6)  // Patio frontal y trasero
 };
 // Variables globales para el control de modos
 int modoActual = 0; // 0: Sin modo, 1: Fiesta, 2: Sueño, 3: Lectura, 4: Exterior
