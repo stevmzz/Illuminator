@@ -206,7 +206,7 @@ Boton botonModo(A4); // Nuevo botón conectado al pin A4 para cambiar modos
 // Función para manejar los modos de luces
 void modosDeLuces() {
     // Verificar si el botón de modos fue presionado
-    if (!botonModos.leer()) return;  // Salir si no se presiona el botón
+    if (!botonModo.leer()) return;  // Salir si no se presiona el botón
 
     // Apagar todas las luces antes de cambiar de modo
     for (int i = 0; i < 7; i++) {
@@ -224,7 +224,7 @@ void modosDeLuces() {
 
         case 1:  // Modo Fiesta: Todos los LEDs parpadean
             Serial.println("Modo Fiesta: Todos los LEDs parpadean.");
-            for (int i = 0; i < 5; i++) {  // Parpadeo rápido 5 veces
+            for (int i = 0; i < 10; i++) {  // Parpadeo rápido 5 veces
                 for (int j = 0; j < 7; j++) {
                     ledsHabitaciones[j].escribir(HIGH);
                 }
@@ -238,16 +238,19 @@ void modosDeLuces() {
 
         case 2:  // Modo Sueño: Apagar todas las luces
             Serial.println("Modo Sueño: Todas las luces apagadas.");
+            delay(200);
             break;  // Ya están apagadas
 
         case 3:  // Modo Lectura: Encender solo la luz de la sala
             Serial.println("Modo Lectura: Luz de la sala encendida.");
             ledsHabitaciones[0].escribir(HIGH);  // Sala (LED en pin 2)
+            delay(200);
             break;
 
         case 4:  // Modo Exterior: Encender solo las luces de los patios
             Serial.println("Modo Exterior: Luces de los patios encendidas.");
             ledsHabitaciones[6].escribir(HIGH);  // Patio frontal y trasero (LED en pin 8)
+            delay(200);
             break;
     }
 }
